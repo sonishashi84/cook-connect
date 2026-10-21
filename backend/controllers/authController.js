@@ -101,4 +101,73 @@ const register = async (req, res) => {
   }
 };
 
-module.exports = { register };
+
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email?.trim() || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Password is select:false in the User model,
+    // so explicitly include it for login verification.
+    const user = await User.findOne({
+      email: normalizedEmail,
+    }).select("+password");
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    const jwt = require("jsonwebtoken");
+
+    const token = jwt.sign(
+      { userId: user._id.toString() },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong during login",
+    });
+  }
+};
+
+module.exports = { register, login };

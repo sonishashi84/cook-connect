@@ -8,6 +8,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 
 const authRoutes = require("./routes/authRoutes");
+const authMiddleware = require("./middleware/authMiddleware");
 
 // Keep this DNS workaround for now; we'll verify whether it's needed
 // when we deploy the application.
@@ -30,6 +31,16 @@ app.get("/api/health", (req, res) => {
     message: "Cook Connect backend is running",
   });
 });
+
+// Temporary endpoint to test authentication
+app.get("/api/auth/me", authMiddleware, (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Authentication successful",
+    userId: req.user.id,
+  });
+});
+
 
 const startServer = async () => {
   try {
