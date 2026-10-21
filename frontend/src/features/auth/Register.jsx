@@ -1,8 +1,9 @@
+//Register.jsx
 import { useState } from "react";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/api/auth/register`
+const API_URL = `${import.meta.env.VITE_API_URL}/api/auth/register`;
 
-function Register() {
+function Register({ onShowLogin }) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -128,6 +129,12 @@ function Register() {
         <button type="submit" disabled={loading}>
           {loading ? "Creating account..." : "Register"}
         </button>
+        <p>
+          Already have an account?{" "}
+          <button type="button" onClick={onShowLogin}>
+            Login
+          </button>
+        </p>
       </form>
     </div>
   );
