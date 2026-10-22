@@ -4,7 +4,7 @@ import { useState } from "react";
 const API_URL = `${import.meta.env.VITE_API_URL}/api/auth/register`;
 
 function Register({ onShowLogin }) {
-   const eslintTestVariable = "test"; // Intentional ESLint error
+   const eslintTestVariable = "test"; // Intentional ESLint errors
   const [formData, setFormData] = useState({
     name: "",
     email: "",
