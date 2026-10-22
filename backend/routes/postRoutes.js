@@ -7,6 +7,26 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+router.get("/", async (req, res) => {
+  try {
+    const posts = await Post.find()
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: posts.length,
+      posts,
+    });
+  } catch (error) {
+    console.error("Get posts error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch posts",
+    });
+  }
+});
+
 router.post("/", authMiddleware, async (req, res) => {
   try {
     const { title, description, city, area } = req.body;
