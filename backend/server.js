@@ -9,6 +9,7 @@ const mongoose = require("mongoose");
 
 const authRoutes = require("./routes/authRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
+const postRoutes = require("./routes/postRoutes");
 
 // Keep this DNS workaround for now; we'll verify whether it's needed
 // when we deploy the application.
@@ -24,6 +25,7 @@ app.use(cors({ origin: FRONTEND_URL }));
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/posts", postRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({

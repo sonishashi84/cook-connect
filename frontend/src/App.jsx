@@ -1,41 +1,34 @@
-//App.jsx
+
 import { useState } from "react";
 import Register from "./features/auth/Register";
 import Login from "./features/auth/Login";
+import CreatePost from "./features/posts/CreatePost";
 import "./App.css";
 
 function App() {
   const [page, setPage] = useState("login");
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
 
   const handleLogin = (data) => {
     setUser(data.user);
-    setPage("profile");
+    setToken(data.token);
+    setPage("createPost");
   };
 
   const handleLogout = () => {
     setUser(null);
+    setToken(null);
     setPage("login");
   };
 
-  if (page === "profile" && user) {
+  if (page === "createPost" && user && token) {
     return (
-      <div className="register-container">
-        <div className="register-form">
-          <h1>Login Successful!</h1>
-          <p>Welcome, {user.name}</p>
-
-          <p>
-            <strong>Email:</strong> {user.email}
-          </p>
-
-          <p>
-            <strong>Role:</strong> {user.role}
-          </p>
-
-          <button onClick={handleLogout}>Logout</button>
-        </div>
-      </div>
+      <CreatePost
+        user={user}
+        token={token}
+        onLogout={handleLogout}
+      />
     );
   }
 
@@ -44,7 +37,10 @@ function App() {
   }
 
   return (
-    <Login onLogin={handleLogin} onShowRegister={() => setPage("register")} />
+    <Login
+      onLogin={handleLogin}
+      onShowRegister={() => setPage("register")}
+    />
   );
 }
 
