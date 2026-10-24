@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Register from "./features/auth/Register";
 import Login from "./features/auth/Login";
@@ -26,15 +25,10 @@ function App() {
   if (page === "feed") {
     return (
       <PostFeed
-        onShowLogin={() => setPage("login")}
-        onShowRegister={() => setPage("register")}
-        onCreatePost={() =>
-          setPage(user && token ? "createPost" : "login")
-        }
+        onCreatePost={() => setPage(user && token ? "createPost" : "login")}
       />
     );
   }
-
   if (page === "register") {
     return <Register onShowLogin={() => setPage("login")} />;
   }

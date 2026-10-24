@@ -1,9 +1,8 @@
-
 import { useEffect, useState } from "react";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/posts`;
 
-function PostFeed({ onShowLogin, onShowRegister, onCreatePost }) {
+function PostFeed({ onCreatePost }) { 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -26,7 +25,7 @@ function PostFeed({ onShowLogin, onShowRegister, onCreatePost }) {
         setError(
           err.message === "Failed to fetch"
             ? "Unable to connect to the server. Please try again."
-            : err.message
+            : err.message,
         );
       } finally {
         setLoading(false);
@@ -43,14 +42,6 @@ function PostFeed({ onShowLogin, onShowRegister, onCreatePost }) {
         <p>Find a cook or discover cook opportunities near you.</p>
 
         <div className="feed-actions">
-          <button type="button" onClick={onShowLogin}>
-            Login
-          </button>
-
-          <button type="button" onClick={onShowRegister}>
-            Register
-          </button>
-
           <button type="button" onClick={onCreatePost}>
             Create a Post
           </button>
