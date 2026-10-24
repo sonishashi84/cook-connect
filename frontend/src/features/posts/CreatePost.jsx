@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/posts`;
 
-function CreatePost({ user, token, onLogout }) {
+function CreatePost({ user, token, onLogout, onViewPosts }) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -59,7 +58,7 @@ function CreatePost({ user, token, onLogout }) {
       setError(
         err.message === "Failed to fetch"
           ? "Unable to connect to the server. Please try again."
-          : err.message
+          : err.message,
       );
     } finally {
       setLoading(false);
@@ -78,6 +77,10 @@ function CreatePost({ user, token, onLogout }) {
 
         <button type="button" onClick={onLogout}>
           Logout
+        </button>
+
+        <button type="button" onClick={onViewPosts}>
+          View Posts
         </button>
 
         <hr />

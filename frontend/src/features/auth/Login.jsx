@@ -3,7 +3,7 @@ import { useState } from "react";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/auth/login`;
 
-function Login({ onLogin, onShowRegister }) {
+function Login({ onLogin, onShowRegister, onShowFeed }) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -47,7 +47,7 @@ function Login({ onLogin, onShowRegister }) {
       setError(
         err.message === "Failed to fetch"
           ? "Unable to connect to the server. Please try again."
-          : err.message
+          : err.message,
       );
     } finally {
       setLoading(false);
@@ -90,14 +90,13 @@ function Login({ onLogin, onShowRegister }) {
 
         <p>
           Don't have an account?{" "}
-          <button
-            type="button"
-            onClick={onShowRegister}
-            disabled={loading}
-          >
+          <button type="button" onClick={onShowRegister} disabled={loading}>
             Register
           </button>
         </p>
+        <button type="button" onClick={onShowFeed} disabled={loading}>
+          View Posts
+        </button>
       </form>
     </div>
   );
