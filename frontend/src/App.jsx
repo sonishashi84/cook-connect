@@ -22,13 +22,18 @@ function App() {
     setPage("feed");
   };
 
-  if (page === "feed") {
-    return (
-      <PostFeed
-        onCreatePost={() => setPage(user && token ? "createPost" : "login")}
-      />
-    );
-  }
+if (page === "feed") {
+  return (
+    <PostFeed
+      user={user}
+      token={token}
+      onCreatePost={() =>
+        setPage(user && token ? "createPost" : "login")
+      }
+    />
+  );
+}
+
   if (page === "register") {
     return <Register onShowLogin={() => setPage("login")} />;
   }

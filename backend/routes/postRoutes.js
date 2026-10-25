@@ -1,16 +1,19 @@
+//routes/postRoutes.js
 
 const express = require("express");
 const mongoose = require("mongoose");
 
 const Post = require("../models/Post");
+const Comment = require("../models/Comment");
 const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+// GET /api/posts
+// Public: fetch all posts
 router.get("/", async (req, res) => {
   try {
-    const posts = await Post.find()
-      .sort({ createdAt: -1 });
+    const posts = await Post.find().sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
@@ -27,6 +30,8 @@ router.get("/", async (req, res) => {
   }
 });
 
+// POST /api/posts
+// Protected: create a post
 router.post("/", authMiddleware, async (req, res) => {
   try {
     const { title, description, city, area } = req.body;
@@ -69,6 +74,115 @@ router.post("/", authMiddleware, async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to create post",
+    });
+  }
+});
+
+// GET /api/posts/:postId/comments
+// Public: fetch comments for one post
+router.get("/:postId/comments", async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    if (!mongoose.isValidObjectId(postId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid post ID",
+      });
+    }
+
+    const postExists = await Post.exists({ _id: postId });
+
+    if (!postExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    const comments = await Comment.find({ post: postId })
+      .populate("createdBy", "name role")
+      .sort({ createdAt: 1 });
+
+    return res.status(200).json({
+      success: true,
+      count: comments.length,
+      comments,
+    });
+  } catch (error) {
+    console.error("Get comments error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch comments",
+    });
+  }
+});
+
+// POST /api/posts/:postId/comments
+// Protected: add a comment
+router.post("/:postId/comments", authMiddleware, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { text } = req.body;
+
+    if (!mongoose.isValidObjectId(postId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid post ID",
+      });
+    }
+
+    if (typeof text !== "string" || !text.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Comment text is required",
+      });
+    }
+
+    if (text.trim().length > 1000) {
+      return res.status(400).json({
+        success: false,
+        message: "Comment cannot exceed 1000 characters",
+      });
+    }
+
+    if (!mongoose.isValidObjectId(req.user.id)) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid authenticated user",
+      });
+    }
+
+    const postExists = await Post.exists({ _id: postId });
+
+    if (!postExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    const comment = await Comment.create({
+      post: postId,
+      createdBy: req.user.id,
+      text: text.trim(),
+    });
+
+    const populatedComment = await Comment.findById(comment._id)
+      .populate("createdBy", "name role");
+
+    return res.status(201).json({
+      success: true,
+      message: "Comment added successfully",
+      comment: populatedComment,
+    });
+  } catch (error) {
+    console.error("Create comment error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to add comment",
     });
   }
 });
