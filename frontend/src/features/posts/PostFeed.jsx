@@ -57,7 +57,7 @@ function PostFeed({ user, token, onCreatePost }) {
             }
 
             return [post._id, data.comments];
-          } catch (err) {
+          } catch {
             return [post._id, null];
           }
         }),
