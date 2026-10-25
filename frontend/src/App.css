@@ -206,3 +206,36 @@
 .post-card p {
   line-height: 1.5;
 }
+
+
+.comment-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 10px;
+  margin: 10px 0;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.comment-card p {
+  line-height: 1.5;
+}
+
+.comment-card p:first-child {
+  margin-top: 0;
+}
+
+.comment-date {
+  color: #666;
+  font-size: 0.8rem;
+  margin-bottom: 0;
+}
+
+.post-card textarea {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 8px 0;
+  padding: 10px;
+  font: inherit;
+  resize: vertical;
+}
