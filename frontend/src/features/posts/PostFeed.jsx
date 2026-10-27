@@ -1,4 +1,4 @@
-
+//PostFeed.jsx
 import { useEffect, useState } from "react";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/posts`;
@@ -11,6 +11,12 @@ function PostFeed({ user, token, onCreatePost }) {
   const [commentInputs, setCommentInputs] = useState({});
   const [commentErrors, setCommentErrors] = useState({});
   const [submittingPostId, setSubmittingPostId] = useState(null);
+  const [cityInput, setCityInput] = useState("");
+  const [areaInput, setAreaInput] = useState("");
+  const [activeFilters, setActiveFilters] = useState({
+    city: "",
+    area: "",
+  });
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -18,13 +24,26 @@ function PostFeed({ user, token, onCreatePost }) {
         setLoading(true);
         setError("");
 
-        const response = await fetch(API_URL);
+        const queryParams = new URLSearchParams();
+
+        if (activeFilters.city) {
+          queryParams.set("city", activeFilters.city);
+        }
+
+        if (activeFilters.area) {
+          queryParams.set("area", activeFilters.area);
+        }
+
+        const queryString = queryParams.toString();
+        const url = queryString ? `${API_URL}?${queryString}` : API_URL;
+
+        const response = await fetch(url);
         const data = await response.json();
 
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch posts");
         }
-
+        setCommentsByPost({});
         setPosts(data.posts);
       } catch (err) {
         setError(
@@ -32,13 +51,14 @@ function PostFeed({ user, token, onCreatePost }) {
             ? "Unable to connect to the server. Please try again."
             : err.message,
         );
+        setPosts([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPosts();
-  }, []);
+  }, [activeFilters]);
 
   useEffect(() => {
     if (posts.length === 0) return;
@@ -47,9 +67,7 @@ function PostFeed({ user, token, onCreatePost }) {
       const results = await Promise.all(
         posts.map(async (post) => {
           try {
-            const response = await fetch(
-              `${API_URL}/${post._id}/comments`,
-            );
+            const response = await fetch(`${API_URL}/${post._id}/comments`);
             const data = await response.json();
 
             if (!response.ok) {
@@ -119,17 +137,14 @@ function PostFeed({ user, token, onCreatePost }) {
     setSubmittingPostId(postId);
 
     try {
-      const response = await fetch(
-        `${API_URL}/${postId}/comments`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ text }),
+      const response = await fetch(`${API_URL}/${postId}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      );
+        body: JSON.stringify({ text }),
+      });
 
       const data = await response.json();
 
@@ -159,6 +174,21 @@ function PostFeed({ user, token, onCreatePost }) {
     }
   };
 
+  const handleApplyFilters = (event) => {
+    event.preventDefault();
+
+    setActiveFilters({
+      city: cityInput.trim(),
+      area: areaInput.trim(),
+    });
+  };
+
+  const handleClearFilters = () => {
+    setCityInput("");
+    setAreaInput("");
+    setActiveFilters({ city: "", area: "" });
+  };
+
   return (
     <div className="register-container">
       <div className="register-form">
@@ -174,6 +204,46 @@ function PostFeed({ user, token, onCreatePost }) {
         <hr />
 
         <h2>Latest Posts</h2>
+
+        <form onSubmit={handleApplyFilters} className="location-filter-form">
+          <label htmlFor="filter-city">City</label>
+          <input
+            id="filter-city"
+            type="text"
+            value={cityInput}
+            onChange={(event) => setCityInput(event.target.value)}
+            placeholder="e.g. Bengaluru"
+          />
+
+          <label htmlFor="filter-area">Area / Locality</label>
+          <input
+            id="filter-area"
+            type="text"
+            value={areaInput}
+            onChange={(event) => setAreaInput(event.target.value)}
+            placeholder="e.g. Marathahalli"
+          />
+
+          <div className="feed-actions">
+            <button type="submit" disabled={loading}>
+              Apply Filters
+            </button>
+
+            <button
+              type="button"
+              onClick={handleClearFilters}
+              disabled={
+                loading ||
+                (!cityInput &&
+                  !areaInput &&
+                  !activeFilters.city &&
+                  !activeFilters.area)
+              }
+            >
+              Clear
+            </button>
+          </div>
+        </form>
 
         {loading && <p>Loading posts...</p>}
         {error && <p className="error-message">{error}</p>}
@@ -214,16 +284,12 @@ function PostFeed({ user, token, onCreatePost }) {
                   </p>
                 )}
 
-                {comments?.length === 0 && (
-                  <p>No comments yet.</p>
-                )}
+                {comments?.length === 0 && <p>No comments yet.</p>}
 
                 {comments?.map((comment) => (
                   <div className="comment-card" key={comment._id}>
                     <p>
-                      <strong>
-                        {comment.createdBy?.name || "User"}
-                      </strong>
+                      <strong>{comment.createdBy?.name || "User"}</strong>
                       {comment.createdBy?.role && (
                         <> · {comment.createdBy.role}</>
                       )}
@@ -238,14 +304,8 @@ function PostFeed({ user, token, onCreatePost }) {
                 ))}
 
                 {user && token ? (
-                  <form
-                    onSubmit={(event) =>
-                      handleAddComment(event, post._id)
-                    }
-                  >
-                    <label htmlFor={`comment-${post._id}`}>
-                      Add a comment
-                    </label>
+                  <form onSubmit={(event) => handleAddComment(event, post._id)}>
+                    <label htmlFor={`comment-${post._id}`}>Add a comment</label>
 
                     <textarea
                       id={`comment-${post._id}`}
@@ -261,9 +321,7 @@ function PostFeed({ user, token, onCreatePost }) {
                     />
 
                     {commentErrors[post._id] && (
-                      <p className="error-message">
-                        {commentErrors[post._id]}
-                      </p>
+                      <p className="error-message">{commentErrors[post._id]}</p>
                     )}
 
                     <button type="submit" disabled={isSubmitting}>
