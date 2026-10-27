@@ -10,10 +10,23 @@ const authMiddleware = require("../middleware/authMiddleware");
 const router = express.Router();
 
 // GET /api/posts
-// Public: fetch all posts
+// Public: fetch posts based on city and area
+
 router.get("/", async (req, res) => {
   try {
-    const posts = await Post.find().sort({ createdAt: -1 });
+    const { city, area } = req.query;
+
+    const filter = {};
+
+    if (city && city.trim()) {
+      filter.city = new RegExp(`^${city.trim()}$`, "i");
+    }
+
+    if (area && area.trim()) {
+      filter.area = new RegExp(`^${area.trim()}$`, "i");
+    }
+
+    const posts = await Post.find(filter).sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
@@ -21,14 +34,15 @@ router.get("/", async (req, res) => {
       posts,
     });
   } catch (error) {
-    console.error("Get posts error:", error.message);
+    console.error("Get posts error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch posts",
+      message: "Something went wrong while fetching posts",
     });
   }
 });
+
 
 // POST /api/posts
 // Protected: create a post
