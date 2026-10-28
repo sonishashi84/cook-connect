@@ -92,6 +92,52 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 });
 
+
+router.delete("/:postId", authMiddleware, async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    if (!mongoose.isValidObjectId(postId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid post ID",
+      });
+    }
+
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    if (post.createdBy.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to delete this post",
+      });
+    }
+
+    await Comment.deleteMany({ post: postId });
+    await post.deleteOne();
+
+    return res.status(200).json({
+      success: true,
+      message: "Post deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete post error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while deleting the post",
+    });
+  }
+});
+
+
 // GET /api/posts/:postId/comments
 // Public: fetch comments for one post
 router.get("/:postId/comments", async (req, res) => {
