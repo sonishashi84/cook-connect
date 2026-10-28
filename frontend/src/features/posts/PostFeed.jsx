@@ -17,6 +17,8 @@ function PostFeed({ user, token, onCreatePost }) {
     city: "",
     area: "",
   });
+  const [deletingPostId, setDeletingPostId] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -174,6 +176,62 @@ function PostFeed({ user, token, onCreatePost }) {
     }
   };
 
+  const handleDeletePost = async (postId) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this post? Its comments will also be deleted.",
+    );
+
+    if (!confirmed) return;
+
+    setDeletingPostId(postId);
+    setDeleteError("");
+
+    try {
+      const response = await fetch(`${API_URL}/${postId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to delete post");
+      }
+
+      // Remove the post from the feed.
+      setPosts((previous) => previous.filter((post) => post._id !== postId));
+
+      // Remove its comments from local state.
+      setCommentsByPost((previous) => {
+        const updated = { ...previous };
+        delete updated[postId];
+        return updated;
+      });
+
+      setCommentInputs((previous) => {
+        const updated = { ...previous };
+        delete updated[postId];
+        return updated;
+      });
+
+      setCommentErrors((previous) => {
+        const updated = { ...previous };
+        delete updated[postId];
+        return updated;
+      });
+    } catch (err) {
+      setDeleteError(
+        err.message === "Failed to fetch"
+          ? "Unable to connect to the server. Please try again."
+          : err.message,
+      );
+    } finally {
+      setDeletingPostId(null);
+    }
+  };
+
   const handleApplyFilters = (event) => {
     event.preventDefault();
 
@@ -246,7 +304,7 @@ function PostFeed({ user, token, onCreatePost }) {
         </form>
 
         {loading && <p>Loading posts...</p>}
-        {error && <p className="error-message">{error}</p>}
+        {deleteError && <p className="error-message">{deleteError}</p>}
 
         {!loading && !error && posts.length === 0 && (
           <p>No posts yet. Be the first to create one!</p>
@@ -261,6 +319,19 @@ function PostFeed({ user, token, onCreatePost }) {
             return (
               <article className="post-card" key={post._id}>
                 <h3>{post.title}</h3>
+
+                {user && token && post.createdBy === user.id && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeletePost(post._id)}
+                    disabled={deletingPostId === post._id}
+                  >
+                    {deletingPostId === post._id
+                      ? "Deleting..."
+                      : "Delete Post"}
+                  </button>
+                )}
+
                 <p>{post.description}</p>
 
                 <p>
