@@ -3,7 +3,7 @@ import { useState } from "react";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/auth/register`;
 
-function Register({ onShowLogin }) {
+function Register({ onShowLogin, onShowFeed }) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -68,74 +68,128 @@ function Register({ onShowLogin }) {
   };
 
   return (
-    <div className="register-container">
-      {" "}
-      <form className="register-form" onSubmit={handleSubmit}>
-        {" "}
-        <h1>Cook Connect</h1> <p>Create your account</p>
-        <label htmlFor="name">Full name</label>
-        <input
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          placeholder="Enter your full name"
-          required
-        />
-        <label htmlFor="email">Email address</label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          placeholder="you@example.com"
-          required
-        />
-        <label htmlFor="phone">Phone number</label>
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          value={formData.phone}
-          onChange={handleChange}
-          placeholder="Enter your phone number"
-          required
-        />
-        <label htmlFor="password">Password</label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          value={formData.password}
-          onChange={handleChange}
-          placeholder="At least 8 characters"
-          minLength={8}
-          required
-        />
-        <label htmlFor="role">Register as</label>
-        <select
-          id="role"
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          required
-        >
-          <option value="CUSTOMER">Customer — looking for a cook</option>
-          <option value="COOK">Cook — offering cooking services</option>
-        </select>
-        {error && <p className="error-message">{error}</p>}
-        {message && <p className="success-message">{message}</p>}
-        <button type="submit" disabled={loading}>
-          {loading ? "Creating account..." : "Register"}
-        </button>
-        <p>
-          Already have an account?{" "}
-          <button type="button" onClick={onShowLogin}>
-            Login
+    <div className="auth-page">
+      <div className="auth-container">
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <h1 className="auth-brand">CookSetu</h1>
+          <h2 className="auth-title">Create Account</h2>
+          <p className="auth-subtitle">Join the CookSetu community.</p>
+
+          <div className="auth-field">
+            <label htmlFor="register-name">Full name</label>
+            <input
+              id="register-name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Enter your full name"
+              autoComplete="name"
+              required
+            />
+          </div>
+
+          <div className="auth-field">
+            <label htmlFor="register-email">Email address</label>
+            <input
+              id="register-email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="you@example.com"
+              autoComplete="email"
+              required
+            />
+          </div>
+
+          <div className="auth-field">
+            <label htmlFor="register-phone">Phone number</label>
+            <input
+              id="register-phone"
+              name="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Enter your phone number"
+              autoComplete="tel"
+              required
+            />
+          </div>
+
+          <div className="auth-field">
+            <label htmlFor="register-password">Password</label>
+            <input
+              id="register-password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="At least 8 characters"
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+          </div>
+
+          <div className="auth-field">
+            <label htmlFor="register-role">Register as</label>
+            <select
+              id="register-role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              required
+            >
+              <option value="CUSTOMER">Customer — looking for a cook</option>
+              <option value="COOK">Cook — offering cooking services</option>
+            </select>
+          </div>
+
+          {error && (
+            <p className="error-message" role="alert">
+              {error}
+            </p>
+          )}
+
+          {message && (
+            <p className="success-message" role="status">
+              {message}
+            </p>
+          )}
+
+          <button
+            className="auth-submit-button"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Creating account..." : "Register"}
           </button>
-        </p>
-      </form>
+
+          <p className="auth-switch">
+            Already have an account?{" "}
+            <button
+              className="auth-link-button"
+              type="button"
+              onClick={onShowLogin}
+              disabled={loading}
+            >
+              Login
+            </button>
+          </p>
+
+          <div className="auth-back">
+            <button
+              className="auth-back-button"
+              type="button"
+              onClick={onShowFeed}
+              disabled={loading}
+            >
+              ← Back to Home / View Posts
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+//App.jsx
 import { useState } from "react";
 import Register from "./features/auth/Register";
 import Login from "./features/auth/Login";
@@ -13,7 +14,7 @@ function App() {
   const handleLogin = (data) => {
     setUser(data.user);
     setToken(data.token);
-    setPage("createPost");
+    setPage("feed");
   };
 
   const handleLogout = () => {
@@ -22,20 +23,23 @@ function App() {
     setPage("feed");
   };
 
-if (page === "feed") {
+if (page === "register") {
   return (
-    <PostFeed
-      user={user}
-      token={token}
-      onCreatePost={() =>
-        setPage(user && token ? "createPost" : "login")
-      }
+    <Register
+      onShowLogin={() => setPage("login")}
+      onShowFeed={() => setPage("feed")}
     />
   );
 }
 
-  if (page === "register") {
-    return <Register onShowLogin={() => setPage("login")} />;
+  if (page === "login") {
+    return (
+      <Login
+        onLogin={handleLogin}
+        onShowRegister={() => setPage("register")}
+        onShowFeed={() => setPage("feed")}
+      />
+    );
   }
 
   if (page === "createPost" && user && token) {
@@ -50,10 +54,15 @@ if (page === "feed") {
   }
 
   return (
-    <Login
-      onLogin={handleLogin}
-      onShowRegister={() => setPage("register")}
-      onShowFeed={() => setPage("feed")}
+    <PostFeed
+      user={user}
+      token={token}
+      onLogin={() => setPage("login")}
+      onRegister={() => setPage("register")}
+      onLogout={handleLogout}
+      onCreatePost={() =>
+        setPage(user && token ? "createPost" : "login")
+      }
     />
   );
 }

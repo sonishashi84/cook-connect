@@ -68,7 +68,7 @@ function CreatePost({ user, token, onLogout, onViewPosts }) {
   return (
     <div className="register-container">
       <div className="register-form">
-        <h1>Cook Connect</h1>
+        <h1>CookSetu</h1>
 
         <p>Welcome, {user.name}</p>
         <p>
