@@ -55,49 +55,79 @@ function Login({ onLogin, onShowRegister, onShowFeed }) {
   };
 
   return (
-    <div className="register-container">
-      <form className="register-form" onSubmit={handleSubmit}>
-        <h1>Cook Connect</h1>
-        <p>Login to your account</p>
+    <div className="auth-page">
+      <div className="auth-container">
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <h1 className="auth-brand">CookSetu</h1>
+          <h2 className="auth-title">Welcome Back</h2>
+          <p className="auth-subtitle">Login to your account</p>
 
-        <label htmlFor="login-email">Email address</label>
-        <input
-          id="login-email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          placeholder="you@example.com"
-          required
-        />
+          <div className="auth-field">
+            <label htmlFor="login-email">Email address</label>
+            <input
+              id="login-email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="you@example.com"
+              autoComplete="email"
+              required
+            />
+          </div>
 
-        <label htmlFor="login-password">Password</label>
-        <input
-          id="login-password"
-          name="password"
-          type="password"
-          value={formData.password}
-          onChange={handleChange}
-          placeholder="Enter your password"
-          required
-        />
+          <div className="auth-field">
+            <label htmlFor="login-password">Password</label>
+            <input
+              id="login-password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+              autoComplete="current-password"
+              required
+            />
+          </div>
 
-        {error && <p className="error-message">{error}</p>}
+          {error && (
+            <p className="error-message" role="alert">
+              {error}
+            </p>
+          )}
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-
-        <p>
-          Don't have an account?{" "}
-          <button type="button" onClick={onShowRegister} disabled={loading}>
-            Register
+          <button
+            className="auth-submit-button"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login"}
           </button>
-        </p>
-        <button type="button" onClick={onShowFeed} disabled={loading}>
-          View Posts
-        </button>
-      </form>
+
+          <p className="auth-switch">
+            Don't have an account?{" "}
+            <button
+              className="auth-link-button"
+              type="button"
+              onClick={onShowRegister}
+              disabled={loading}
+            >
+              Register
+            </button>
+          </p>
+
+          <div className="auth-back">
+            <button
+              className="auth-back-button"
+              type="button"
+              onClick={onShowFeed}
+              disabled={loading}
+            >
+              ← Back to Home / View Posts
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

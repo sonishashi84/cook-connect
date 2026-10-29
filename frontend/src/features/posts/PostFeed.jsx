@@ -3,7 +3,14 @@ import { useEffect, useState } from "react";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/posts`;
 
-function PostFeed({ user, token, onCreatePost }) {
+function PostFeed({
+  user,
+  token,
+  onLogin,
+  onRegister,
+  onLogout,
+  onCreatePost,
+}) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -11,14 +18,14 @@ function PostFeed({ user, token, onCreatePost }) {
   const [commentInputs, setCommentInputs] = useState({});
   const [commentErrors, setCommentErrors] = useState({});
   const [submittingPostId, setSubmittingPostId] = useState(null);
+  const [deletingPostId, setDeletingPostId] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
   const [cityInput, setCityInput] = useState("");
   const [areaInput, setAreaInput] = useState("");
   const [activeFilters, setActiveFilters] = useState({
     city: "",
     area: "",
   });
-  const [deletingPostId, setDeletingPostId] = useState(null);
-  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -45,6 +52,7 @@ function PostFeed({ user, token, onCreatePost }) {
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch posts");
         }
+
         setCommentsByPost({});
         setPosts(data.posts);
       } catch (err) {
@@ -200,10 +208,8 @@ function PostFeed({ user, token, onCreatePost }) {
         throw new Error(data.message || "Failed to delete post");
       }
 
-      // Remove the post from the feed.
       setPosts((previous) => previous.filter((post) => post._id !== postId));
 
-      // Remove its comments from local state.
       setCommentsByPost((previous) => {
         const updated = { ...previous };
         delete updated[postId];
@@ -248,164 +254,239 @@ function PostFeed({ user, token, onCreatePost }) {
   };
 
   return (
-    <div className="register-container">
-      <div className="register-form">
-        <h1>Cook Connect</h1>
-        <p>Find a cook or discover cook opportunities near you.</p>
-
-        <div className="feed-actions">
-          <button type="button" onClick={onCreatePost}>
-            Create a Post
+    <div className="home-page">
+      <header className="home-navbar">
+        <div className="home-navbar-inner">
+          <button
+            type="button"
+            className="brand-button"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          >
+            CookSetu
           </button>
+
+          <nav className="navbar-actions" aria-label="Main navigation">
+            {user && token ? (
+              <>
+                <span className="navbar-user">Hi, {user.name}</span>
+                <button type="button" className="nav-button" onClick={onLogout}>
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" className="nav-button" onClick={onLogin}>
+                  Login
+                </button>
+                <button
+                  type="button"
+                  className="nav-button nav-button-primary"
+                  onClick={onRegister}
+                >
+                  Register
+                </button>
+              </>
+            )}
+          </nav>
         </div>
+      </header>
 
-        <hr />
+      <main className="home-content">
+        <section className="post-prompt-section">
+          <button type="button" className="post-prompt" onClick={onCreatePost}>
+            <span className="post-prompt-text">
+              Want to find a cook or share your availability?
+            </span>
+            <span className="post-prompt-action">Write a post...</span>
+          </button>
+        </section>
 
-        <h2>Latest Posts</h2>
+        <section className="filter-section">
+          <form onSubmit={handleApplyFilters} className="location-filter-form">
+            <div className="filter-fields">
+              <div className="filter-field">
+                <label htmlFor="filter-city">City</label>
+                <input
+                  id="filter-city"
+                  type="text"
+                  value={cityInput}
+                  onChange={(event) => setCityInput(event.target.value)}
+                  placeholder="e.g. Bengaluru"
+                />
+              </div>
 
-        <form onSubmit={handleApplyFilters} className="location-filter-form">
-          <label htmlFor="filter-city">City</label>
-          <input
-            id="filter-city"
-            type="text"
-            value={cityInput}
-            onChange={(event) => setCityInput(event.target.value)}
-            placeholder="e.g. Bengaluru"
-          />
+              <div className="filter-field">
+                <label htmlFor="filter-area">Area / Locality</label>
+                <input
+                  id="filter-area"
+                  type="text"
+                  value={areaInput}
+                  onChange={(event) => setAreaInput(event.target.value)}
+                  placeholder="e.g. Marathahalli"
+                />
+              </div>
+            </div>
 
-          <label htmlFor="filter-area">Area / Locality</label>
-          <input
-            id="filter-area"
-            type="text"
-            value={areaInput}
-            onChange={(event) => setAreaInput(event.target.value)}
-            placeholder="e.g. Marathahalli"
-          />
+            <div className="filter-actions">
+              <button type="submit" disabled={loading}>
+                Apply Filters
+              </button>
 
-          <div className="feed-actions">
-            <button type="submit" disabled={loading}>
-              Apply Filters
-            </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={handleClearFilters}
+                disabled={
+                  loading ||
+                  (!cityInput &&
+                    !areaInput &&
+                    !activeFilters.city &&
+                    !activeFilters.area)
+                }
+              >
+                Clear
+              </button>
+            </div>
+          </form>
+        </section>
 
-            <button
-              type="button"
-              onClick={handleClearFilters}
-              disabled={
-                loading ||
-                (!cityInput &&
-                  !areaInput &&
-                  !activeFilters.city &&
-                  !activeFilters.area)
-              }
-            >
-              Clear
-            </button>
-          </div>
-        </form>
+        <section className="posts-section">
+          {loading && <p>Loading posts...</p>}
+          {error && <p className="error-message">{error}</p>}
+          {deleteError && <p className="error-message">{deleteError}</p>}
 
-        {loading && <p>Loading posts...</p>}
-        {deleteError && <p className="error-message">{deleteError}</p>}
+          {!loading && !error && posts.length === 0 && (
+            <p className="empty-posts">
+              No posts yet. Be the first to create one!
+            </p>
+          )}
 
-        {!loading && !error && posts.length === 0 && (
-          <p>No posts yet. Be the first to create one!</p>
-        )}
+          {!loading &&
+            !error &&
+            posts.map((post) => {
+              const comments = commentsByPost[post._id];
+              const isSubmitting = submittingPostId === post._id;
 
-        {!loading &&
-          !error &&
-          posts.map((post) => {
-            const comments = commentsByPost[post._id];
-            const isSubmitting = submittingPostId === post._id;
+              return (
+                <article className="post-card" key={post._id}>
+                  <div className="post-header">
+                    <div className="post-author-avatar" aria-hidden="true">
+                      {(post.createdBy?.name || "U").charAt(0).toUpperCase()}
+                    </div>
 
-            return (
-              <article className="post-card" key={post._id}>
-                <h3>{post.title}</h3>
+                    <div className="post-author-details">
+                      <strong className="post-author-name">
+                        {post.createdBy?.name || "Community member"}
+                      </strong>
+                      <span className="post-meta">
+                        {new Date(post.createdAt).toLocaleString()}
+                      </span>
+                      <span className="post-meta">
+                        {post.area}, {post.city}
+                      </span>
+                    </div>
 
-                {user && token && post.createdBy === user.id && (
-                  <button
-                    type="button"
-                    onClick={() => handleDeletePost(post._id)}
-                    disabled={deletingPostId === post._id}
-                  >
-                    {deletingPostId === post._id
-                      ? "Deleting..."
-                      : "Delete Post"}
-                  </button>
-                )}
-
-                <p>{post.description}</p>
-
-                <p>
-                  <strong>Location:</strong> {post.area}, {post.city}
-                </p>
-
-                <p>
-                  <strong>Posted:</strong>{" "}
-                  {new Date(post.createdAt).toLocaleString()}
-                </p>
-
-                <hr />
-
-                <h4>Comments ({comments?.length ?? "..."})</h4>
-
-                {comments === undefined && <p>Loading comments...</p>}
-
-                {comments === null && (
-                  <p className="error-message">
-                    Unable to load comments. Please refresh the page.
-                  </p>
-                )}
-
-                {comments?.length === 0 && <p>No comments yet.</p>}
-
-                {comments?.map((comment) => (
-                  <div className="comment-card" key={comment._id}>
-                    <p>
-                      <strong>{comment.createdBy?.name || "User"}</strong>
-                      {comment.createdBy?.role && (
-                        <> · {comment.createdBy.role}</>
+                    {user &&
+                      token &&
+                      (post.createdBy?._id || post.createdBy) === user.id && (
+                        <button
+                          type="button"
+                          className="delete-post-button"
+                          onClick={() => handleDeletePost(post._id)}
+                          disabled={deletingPostId === post._id}
+                        >
+                          {deletingPostId === post._id
+                            ? "Deleting..."
+                            : "Delete"}
+                        </button>
                       )}
-                    </p>
-
-                    <p>{comment.text}</p>
-
-                    <p className="comment-date">
-                      {new Date(comment.createdAt).toLocaleString()}
-                    </p>
                   </div>
-                ))}
 
-                {user && token ? (
-                  <form onSubmit={(event) => handleAddComment(event, post._id)}>
-                    <label htmlFor={`comment-${post._id}`}>Add a comment</label>
+                  <h3 className="post-title">{post.title}</h3>
+                  <p className="post-description">{post.description}</p>
 
-                    <textarea
-                      id={`comment-${post._id}`}
-                      value={commentInputs[post._id] || ""}
-                      onChange={(event) =>
-                        handleCommentChange(post._id, event.target.value)
-                      }
-                      placeholder="Write your comment..."
-                      rows={3}
-                      maxLength={1000}
-                      required
-                      disabled={isSubmitting}
-                    />
+                  <div className="comments-section">
+                    <h4>Comments ({comments?.length ?? "..."})</h4>
 
-                    {commentErrors[post._id] && (
-                      <p className="error-message">{commentErrors[post._id]}</p>
+                    {comments === undefined && <p>Loading comments...</p>}
+
+                    {comments === null && (
+                      <p className="error-message">
+                        Unable to load comments. Please refresh the page.
+                      </p>
                     )}
 
-                    <button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? "Adding..." : "Add Comment"}
-                    </button>
-                  </form>
-                ) : (
-                  <p>Login to add a comment.</p>
-                )}
-              </article>
-            );
-          })}
-      </div>
+                    {comments?.length === 0 && (
+                      <p className="no-comments">No comments yet.</p>
+                    )}
+
+                    {comments?.map((comment) => (
+                      <div className="comment-card" key={comment._id}>
+                        <p className="comment-author">
+                          <strong>{comment.createdBy?.name || "User"}</strong>
+                          {comment.createdBy?.role && (
+                            <> · {comment.createdBy.role}</>
+                          )}
+                        </p>
+
+                        <p className="comment-text">{comment.text}</p>
+
+                        <p className="comment-date">
+                          {new Date(comment.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+
+                    {user && token ? (
+                      <form
+                        className="add-comment-form"
+                        onSubmit={(event) => handleAddComment(event, post._id)}
+                      >
+                        <label htmlFor={`comment-${post._id}`}>
+                          Add a comment
+                        </label>
+
+                        <textarea
+                          id={`comment-${post._id}`}
+                          value={commentInputs[post._id] || ""}
+                          onChange={(event) =>
+                            handleCommentChange(post._id, event.target.value)
+                          }
+                          placeholder="Write your comment..."
+                          rows={2}
+                          maxLength={1000}
+                          required
+                          disabled={isSubmitting}
+                        />
+
+                        {commentErrors[post._id] && (
+                          <p className="error-message">
+                            {commentErrors[post._id]}
+                          </p>
+                        )}
+
+                        <button type="submit" disabled={isSubmitting}>
+                          {isSubmitting ? "Adding..." : "Add Comment"}
+                        </button>
+                      </form>
+                    ) : (
+                      <p className="login-to-comment">
+                        <button
+                          type="button"
+                          className="text-button"
+                          onClick={onLogin}
+                        >
+                          Login
+                        </button>{" "}
+                        to add a comment.
+                      </p>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+        </section>
+      </main>
     </div>
   );
 }
