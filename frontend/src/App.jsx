@@ -1,8 +1,6 @@
-//App.jsx
 import { useState } from "react";
 import Register from "./features/auth/Register";
 import Login from "./features/auth/Login";
-import CreatePost from "./features/posts/CreatePost";
 import PostFeed from "./features/posts/PostFeed";
 import "./App.css";
 
@@ -23,14 +21,14 @@ function App() {
     setPage("feed");
   };
 
-if (page === "register") {
-  return (
-    <Register
-      onShowLogin={() => setPage("login")}
-      onShowFeed={() => setPage("feed")}
-    />
-  );
-}
+  if (page === "register") {
+    return (
+      <Register
+        onShowLogin={() => setPage("login")}
+        onShowFeed={() => setPage("feed")}
+      />
+    );
+  }
 
   if (page === "login") {
     return (
@@ -42,17 +40,6 @@ if (page === "register") {
     );
   }
 
-  if (page === "createPost" && user && token) {
-    return (
-      <CreatePost
-        user={user}
-        token={token}
-        onLogout={handleLogout}
-        onViewPosts={() => setPage("feed")}
-      />
-    );
-  }
-
   return (
     <PostFeed
       user={user}
@@ -60,9 +47,6 @@ if (page === "register") {
       onLogin={() => setPage("login")}
       onRegister={() => setPage("register")}
       onLogout={handleLogout}
-      onCreatePost={() =>
-        setPage(user && token ? "createPost" : "login")
-      }
     />
   );
 }

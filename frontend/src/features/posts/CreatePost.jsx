@@ -1,33 +1,35 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import { BANGALORE_AREAS } from "../../constants/locations";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/posts`;
 
-function CreatePost({ user, token, onLogout, onViewPosts }) {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    city: "",
-    area: "",
-  });
-
+function CreatePost({ user, token, onLogin, onPostCreated }) {
+  const [description, setDescription] = useState("");
+  const [area, setArea] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const [isAreaOpen, setIsAreaOpen] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     setError("");
     setSuccess("");
+
+    const trimmedDescription = description.trim();
+    const trimmedArea = area.trim();
+
+    if (!trimmedDescription) {
+      setError("Please enter your message.");
+      return;
+    }
+
+    if (!BANGALORE_AREAS.includes(trimmedArea)) {
+      setError("Please select your area.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -37,7 +39,11 @@ function CreatePost({ user, token, onLogout, onViewPosts }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          description: trimmedDescription,
+          city: "Bangalore",
+          area: trimmedArea,
+        }),
       });
 
       const data = await response.json();
@@ -46,14 +52,11 @@ function CreatePost({ user, token, onLogout, onViewPosts }) {
         throw new Error(data.message || "Failed to create post");
       }
 
-      setSuccess("Post created successfully!");
+      setDescription("");
+      setArea("");
+      setSuccess("Your post has been published!");
 
-      setFormData({
-        title: "",
-        description: "",
-        city: "",
-        area: "",
-      });
+      onPostCreated();
     } catch (err) {
       setError(
         err.message === "Failed to fetch"
@@ -65,84 +68,110 @@ function CreatePost({ user, token, onLogout, onViewPosts }) {
     }
   };
 
+  useEffect(() => {
+  if (!success) return;
+
+  const timer = setTimeout(() => {
+    setSuccess("");
+  }, 3500);
+
+  return () => clearTimeout(timer);
+}, [success]);
+
   return (
-    <div className="register-container">
-      <div className="register-form">
-        <h1>CookSetu</h1>
+    <section className="create-post-section">
+      <form
+        onSubmit={
+          user && token
+            ? handleSubmit
+            : (event) => {
+                event.preventDefault();
+                onLogin();
+              }
+        }
+      >
+        <textarea
+          className="create-post-message"
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="Write here if looking for cook or cooking services job..."
+          rows={3}
+          maxLength={2000}
+          required
+          disabled={!user || !token || loading}
+        />
 
-        <p>Welcome, {user.name}</p>
-        <p>
-          <strong>Role:</strong> {user.role}
-        </p>
-
-        <button type="button" onClick={onLogout}>
-          Logout
-        </button>
-
-        <button type="button" onClick={onViewPosts}>
-          View Posts
-        </button>
-
-        <hr />
-
-        <h2>Create a Post</h2>
-        <p>Share a cook requirement or your availability.</p>
-
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="post-title">Post title</label>
+        <div className="create-post-location-row">
           <input
-            id="post-title"
-            name="title"
             type="text"
-            value={formData.title}
-            onChange={handleChange}
-            placeholder="Looking for a cook"
-            required
+            value="Bangalore"
+            disabled
+            aria-label="City"
+            className="create-post-city"
           />
+          <div className="create-post-area-wrapper">
+            <input
+              type="text"
+              value={area}
+              onChange={(event) => {
+                setArea(event.target.value);
+                setIsAreaOpen(true);
+              }}
+              onFocus={() => setIsAreaOpen(true)}
+              onBlur={() => {
+                setTimeout(() => setIsAreaOpen(false), 150);
+              }}
+              placeholder="Select your area..."
+              aria-label="Area"
+              aria-expanded={isAreaOpen}
+              disabled={!user || !token || loading}
+              className="create-post-area"
+            />
 
-          <label htmlFor="post-description">Description</label>
-          <textarea
-            id="post-description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Describe the requirement or availability"
-            required
-            rows={4}
-          />
+            {isAreaOpen && (
+              <div className="create-post-area-options">
+                {BANGALORE_AREAS.filter((locality) =>
+                  locality.toLowerCase().includes(area.toLowerCase()),
+                ).map((locality) => (
+                  <button
+                    type="button"
+                    key={locality}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => {
+                      setArea(locality);
+                      setIsAreaOpen(false);
+                    }}
+                  >
+                    {locality}
+                  </button>
+                ))}
 
-          <label htmlFor="post-city">City</label>
-          <input
-            id="post-city"
-            name="city"
-            type="text"
-            value={formData.city}
-            onChange={handleChange}
-            placeholder="Bengaluru"
-            required
-          />
+                {BANGALORE_AREAS.filter((locality) =>
+                  locality.toLowerCase().includes(area.toLowerCase()),
+                ).length === 0 && (
+                  <p className="no-area-options">No matching area found</p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
 
-          <label htmlFor="post-area">Area / locality</label>
-          <input
-            id="post-area"
-            name="area"
-            type="text"
-            value={formData.area}
-            onChange={handleChange}
-            placeholder="Marathahalli"
-            required
-          />
+        {error && <p className="error-message">{error}</p>}
+        {success && <p className="success-message">{success}</p>}
 
-          {error && <p className="error-message">{error}</p>}
-
-          {success && <p>{success}</p>}
-
-          <button type="submit" disabled={loading}>
-            {loading ? "Creating post..." : "Create Post"}
-          </button>
-        </form>
-      </div>
-    </div>
+        <div className="create-post-actions">
+          {user && token ? (
+            <button type="submit" disabled={loading}>
+              {loading ? "Posting..." : "Post"}
+            </button>
+          ) : (
+            <button type="button" onClick={onLogin}>
+              Login to post
+            </button>
+          )}
+        </div>
+      </form>
+    </section>
   );
 }
 

@@ -1,16 +1,10 @@
 //PostFeed.jsx
 import { useEffect, useState } from "react";
+import CreatePost from "./CreatePost";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/posts`;
 
-function PostFeed({
-  user,
-  token,
-  onLogin,
-  onRegister,
-  onLogout,
-  onCreatePost,
-}) {
+function PostFeed({ user, token, onLogin, onRegister, onLogout }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -26,6 +20,7 @@ function PostFeed({
     city: "",
     area: "",
   });
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -68,7 +63,7 @@ function PostFeed({
     };
 
     fetchPosts();
-  }, [activeFilters]);
+  }, [activeFilters, refreshKey]);
 
   useEffect(() => {
     if (posts.length === 0) return;
@@ -292,14 +287,12 @@ function PostFeed({
       </header>
 
       <main className="home-content">
-        <section className="post-prompt-section">
-          <button type="button" className="post-prompt" onClick={onCreatePost}>
-            <span className="post-prompt-text">
-              Want to find a cook or share your availability?
-            </span>
-            <span className="post-prompt-action">Write a post...</span>
-          </button>
-        </section>
+        <CreatePost
+          user={user}
+          token={token}
+          onLogin={onLogin}
+          onPostCreated={() => setRefreshKey((previous) => previous + 1)}
+        />
 
         <section className="filter-section">
           <form onSubmit={handleApplyFilters} className="location-filter-form">
@@ -402,7 +395,6 @@ function PostFeed({
                       )}
                   </div>
 
-                  <h3 className="post-title">{post.title}</h3>
                   <p className="post-description">{post.description}</p>
 
                   <div className="comments-section">
