@@ -43,22 +43,16 @@ router.get("/", async (req, res) => {
   }
 });
 
-
 // POST /api/posts
 // Protected: create a post
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { title, description, city, area } = req.body;
+    const { description, city, area } = req.body;
 
-    if (
-      !title?.trim() ||
-      !description?.trim() ||
-      !city?.trim() ||
-      !area?.trim()
-    ) {
+    if (!description?.trim() || !city?.trim() || !area?.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Title, description, city, and area are required",
+        message: "Message, city, and area are required",
       });
     }
 
@@ -70,10 +64,9 @@ router.post("/", authMiddleware, async (req, res) => {
     }
 
     const post = await Post.create({
-      title,
-      description,
-      city,
-      area,
+      description: description.trim(),
+      city: city.trim(),
+      area: area.trim(),
       createdBy: req.user.id,
     });
 
@@ -91,7 +84,6 @@ router.post("/", authMiddleware, async (req, res) => {
     });
   }
 });
-
 
 router.delete("/:postId", authMiddleware, async (req, res) => {
   try {
@@ -136,7 +128,6 @@ router.delete("/:postId", authMiddleware, async (req, res) => {
     });
   }
 });
-
 
 // GET /api/posts/:postId/comments
 // Public: fetch comments for one post
@@ -229,8 +220,10 @@ router.post("/:postId/comments", authMiddleware, async (req, res) => {
       text: text.trim(),
     });
 
-    const populatedComment = await Comment.findById(comment._id)
-      .populate("createdBy", "name role");
+    const populatedComment = await Comment.findById(comment._id).populate(
+      "createdBy",
+      "name role",
+    );
 
     return res.status(201).json({
       success: true,
